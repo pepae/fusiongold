@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<title>Fusion gold vs. the gold price</title>
+<meta name="description" content="How much cheaper does gold get if fusion reactors make it from mercury? Interactive model.">
+<meta property="og:title" content="Fusion gold vs. the gold price">
+<meta property="og:description" content="Five inputs: fusion build-out, gold-making share, blanket design, mercury supply, investor reaction.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Crect width=%27100%27 height=%27100%27 fill=%27%23FFC400%27/%3E%3Ccircle cx=%2750%27 cy=%2750%27 r=%2730%27 fill=%27%23E2231A%27/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ECECE8; --paper:#FFFFFF; --ink:#0E0E0E; --muted:#5C5C5C; --rule:#D5D5D0; --grid:#E7E7E3;
+  --red:#E2231A; --yellow:#FFC400; --blue:#1E43D1;
+  --sans:"Archivo",system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color-scheme: light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:inherit;}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 110px);}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.45;-webkit-text-size-adjust:100%;}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg);}
+button{font:inherit;color:inherit;}
+a{color:var(--blue);text-underline-offset:2px;}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px;}
+
+.top{background:var(--ink);color:#fff;font-family:var(--mono);font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;}
+.top .in{max-width:1200px;margin:0 auto;padding:8px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;}
+.brand{display:flex;align-items:center;gap:8px;white-space:nowrap;}
+.mark{display:inline-flex;gap:2px;}
+.mark i{display:block;width:9px;height:9px;}
+.mark i:nth-child(1){background:var(--red);}
+.mark i:nth-child(2){background:var(--yellow);border-radius:50%;}
+.mark i:nth-child(3){background:var(--blue);}
+.quote{white-space:nowrap;}
+.quote b{color:var(--yellow);font-weight:600;}
+
+.wrap{max-width:1200px;margin:0 auto;padding:0 16px 32px;}
+h1{margin:20px 0 14px;font-weight:850;font-variation-settings:"wdth" 68;font-size:clamp(30px,7vw,58px);line-height:.95;text-transform:uppercase;letter-spacing:-.005em;max-width:16ch;}
+
+.board{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:8px 0 10px;}
+.lbl{font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:0 0 6px;}
+.cells{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:2px solid var(--ink);background:var(--paper);box-shadow:4px 4px 0 var(--ink);}
+.cell{appearance:none;border:0;border-left:2px solid var(--ink);background:var(--paper);padding:7px 10px 8px;text-align:left;cursor:pointer;min-width:0;}
+.cell:first-child{border-left:0;}
+.cell[aria-pressed="true"]{background:var(--yellow);}
+.cell .y{display:block;font-family:var(--mono);font-size:11px;font-weight:600;}
+.cell .g{display:block;font-family:var(--mono);font-weight:700;font-size:clamp(20px,5.6vw,36px);line-height:1.1;color:var(--red);letter-spacing:-.02em;}
+.cell .g.zero{color:var(--ink);}
+.cell .p{display:block;font-family:var(--mono);font-size:11px;color:var(--muted);}
+.cell[aria-pressed="true"] .p{color:var(--ink);}
+
+.scen{margin-top:12px;}
+.seg{display:flex;border:2px solid var(--ink);background:var(--paper);}
+.seg button{flex:1 1 0;min-width:0;appearance:none;border:0;border-left:2px solid var(--ink);background:transparent;padding:8px 6px;font-weight:650;font-size:13.5px;line-height:1.15;cursor:pointer;}
+.seg button:first-child{border-left:0;}
+.seg button[aria-pressed="true"]{background:var(--ink);color:#fff;}
+
+.grid{display:grid;gap:16px;margin-top:16px;grid-template-columns:minmax(0,1fr);grid-template-areas:"price" "inputs" "chain" "supply";}
+.a-price{grid-area:price;} .a-inputs{grid-area:inputs;} .a-chain{grid-area:chain;} .a-supply{grid-area:supply;}
+@media (min-width:960px){
+  .grid{grid-template-columns:380px minmax(0,1fr);grid-template-areas:"inputs price" "chain supply";align-items:start;}
+}
+
+.panel{background:var(--paper);border:2px solid var(--ink);}
+.ph{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:4px 12px;padding:8px 12px;border-bottom:2px solid var(--ink);font-family:var(--mono);font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;}
+.ph h2{margin:0;font-size:inherit;font-weight:600;}
+.pb{padding:10px 12px 12px;}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;text-transform:none;letter-spacing:0;color:var(--muted);}
+.legend span{display:inline-flex;align-items:center;gap:6px;}
+.k{display:inline-block;width:16px;height:0;border-top:2px solid var(--ink);}
+.k.dash{border-top-style:dashed;}
+.k.red{border-top:3px solid var(--red);}
+.k.box{width:12px;height:10px;border:1.5px solid var(--ink);background:var(--yellow);}
+
+/* inputs */
+.ctl{padding:12px 0 10px;border-top:1px solid var(--rule);}
+.ctl:first-child{border-top:0;padding-top:4px;}
+.ctl-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;}
+.ctl-h label,.ctl-h span.t{font-weight:650;font-size:14px;}
+.ctl-h output{font-family:var(--mono);font-weight:600;font-size:14px;white-space:nowrap;}
+.spec{margin:4px 0 0;font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.4;}
+.ticks{position:relative;height:14px;margin-top:-2px;font-family:var(--mono);font-size:10px;color:var(--muted);}
+.ticks span{position:absolute;top:2px;white-space:nowrap;padding-left:4px;}
+.ticks span::before{content:"";position:absolute;left:0;top:-5px;width:1px;height:12px;background:var(--muted);}
+.ticks span.r{transform:translateX(-100%);padding-left:0;padding-right:4px;}
+.ticks span.r::before{left:auto;right:0;}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:30px;background:transparent;margin:2px 0 0;cursor:pointer;}
+input[type=range]::-webkit-slider-runnable-track{height:3px;background:linear-gradient(to right,var(--ink) 0 var(--fill,50%),var(--rule) var(--fill,50%) 100%);}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:0;background:var(--yellow);border:2px solid var(--ink);margin-top:-7.5px;}
+input[type=range]::-moz-range-track{height:3px;background:var(--rule);}
+input[type=range]::-moz-range-progress{height:3px;background:var(--ink);}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:0;background:var(--yellow);border:2px solid var(--ink);}
+.seg.small button{font-size:13px;padding:7px 4px;}
+.actions{display:flex;gap:8px;padding-top:12px;border-top:1px solid var(--rule);margin-top:2px;}
+.btn{appearance:none;cursor:pointer;border:2px solid var(--ink);background:var(--paper);padding:7px 12px;font-weight:650;font-size:13px;}
+.btn.primary{background:var(--ink);color:#fff;}
+.btn:active{transform:translate(2px,2px);}
+.share-out{display:none;margin-top:8px;}
+.share-out input{width:100%;font-family:var(--mono);font-size:11px;padding:6px 8px;border:2px solid var(--ink);background:var(--bg);color:var(--ink);}
+.share-msg{margin:6px 0 0;font-family:var(--mono);font-size:11px;color:var(--muted);min-height:1.2em;}
+
+/* breakdown */
+.chain{width:100%;border-collapse:collapse;}
+.chain th{text-align:left;font-weight:500;font-size:14px;padding:7px 8px 7px 0;border-top:1px solid var(--rule);}
+.chain td{text-align:right;font-family:var(--mono);font-size:13.5px;padding:7px 0;border-top:1px solid var(--rule);white-space:nowrap;}
+.chain tr:first-child th,.chain tr:first-child td{border-top:0;}
+.chain tr.sub th{padding-left:14px;color:var(--muted);}
+.chain tr.total th,.chain tr.total td{border-top:2px solid var(--ink);font-weight:700;font-size:16px;padding-top:9px;}
+.chain .red{color:var(--red);} .chain .blue{color:var(--blue);font-weight:600;}
+
+/* charts */
+.chart{position:relative;width:100%;touch-action:pan-y;}
+.chart svg{display:block;width:100%;height:auto;overflow:visible;}
+.chart text{font-family:var(--mono);font-size:10.5px;fill:var(--muted);}
+.chart text.mk{font-size:10px;font-weight:600;}
+.tip{position:absolute;display:none;pointer-events:none;z-index:2;background:var(--paper);border:2px solid var(--ink);box-shadow:3px 3px 0 var(--ink);padding:5px 8px;font-family:var(--mono);font-size:11.5px;line-height:1.45;white-space:nowrap;}
+.tip b{display:block;}
+.tip .r{display:flex;justify-content:space-between;gap:14px;}
+.tip .r span:first-child{color:var(--muted);}
+
+/* notes */
+.notes{margin-top:16px;background:var(--paper);border:2px solid var(--ink);}
+.notes summary{list-style:none;cursor:pointer;padding:9px 12px;font-family:var(--mono);font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;display:flex;justify-content:space-between;}
+.notes summary::-webkit-details-marker{display:none;}
+.notes summary::after{content:"+";font-weight:700;}
+.notes[open] summary::after{content:"\2212";}
+.notes .body{border-top:2px solid var(--ink);padding:10px 12px 4px;}
+.notes ol,.notes ul{margin:0 0 10px;padding-left:1.3em;}
+.notes li{font-size:14px;margin-bottom:6px;max-width:80ch;}
+.foot{margin-top:12px;font-family:var(--mono);font-size:11px;color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="top"><div class="in">
+  <span class="brand"><span class="mark" aria-hidden="true"><i></i><i></i><i></i></span>Fusion gold model</span>
+  <span class="quote">XAU <b>$4,090</b> · 22 Oct 2026</span>
+</div></div>
+
+<div class="wrap">
+  <h1>How much cheaper does gold get if fusion makes it?</h1>
+
+  <div class="board">
+    <p class="lbl">Gold price vs. a world without fusion gold</p>
+    <div class="cells" id="cells" role="group" aria-label="Price gap by year"></div>
+  </div>
+
+  <div class="scen">
+    <p class="lbl">Scenario</p>
+    <div class="seg" id="presets" role="group" aria-label="Scenario"></div>
+  </div>
+
+  <div class="grid">
+    <section class="panel a-price" aria-labelledby="h-price">
+      <div class="ph"><h2 id="h-price">Gold, $/oz</h2>
+        <div class="legend"><span><i class="k dash"></i>No fusion gold</span><span><i class="k red"></i>With fusion gold</span></div></div>
+      <div class="pb"><div class="chart" id="priceChart"></div></div>
+    </section>
+
+    <section class="panel a-inputs" aria-labelledby="h-inputs">
+      <div class="ph"><h2 id="h-inputs">Inputs</h2></div>
+      <div class="pb" id="inputs"></div>
+    </section>
+
+    <section class="panel a-chain" aria-labelledby="h-chain">
+      <div class="ph"><h2 id="h-chain">Breakdown</h2></div>
+      <div class="pb"><table class="chain" id="chain"></table></div>
+    </section>
+
+    <section class="panel a-supply" aria-labelledby="h-supply">
+      <div class="ph"><h2 id="h-supply">Gold supply, t/yr</h2>
+        <div class="legend"><span><i class="k"></i>Mines</span><span><i class="k box"></i>Fusion</span></div></div>
+      <div class="pb"><div class="chart" id="supplyChart"></div></div>
+    </section>
+  </div>
+
+  <details class="notes">
+    <summary>Method</summary>
+    <div class="body"><ol>
+      <li>Fusion grows on an S-curve from 1 GW in 2031 to your 2050 level, then 3% a year.</li>
+      <li>Gold output = gold-making GW × blanket yield ÷ 40% efficiency × 80% uptime.</li>
+      <li>Blankets lock up mercury, and each tonne of gold uses up about a tonne of convertible mercury. When supply runs out, gold-making capacity is capped, then shrinks.</li>
+      <li>Once fusion output passes 25 t/yr, investors start pricing in the extra gold expected over the next 10 years. The price falls with the bigger effective stock (222,600 t today) and with holders who leave as gold stops being scarce.</li>
+      <li>Investor reaction sets how much future gold is priced in (20% to 100%) and how many holders can leave (5% to 55%).</li>
+      <li>Fixed: 10 years of cooling before sale (barely matters, markets price the metal early); mines cut 0.3% of output per 1% price drop; no new gold-making capacity once the price nears $1,100/oz.</li>
+    </ol></div>
+  </details>
+  <details class="notes">
+    <summary>Sources</summary>
+    <div class="body"><ul>
+      <li><a href="https://arxiv.org/abs/2507.13461v1" target="_blank" rel="noopener">Rutkowski et al. 2025</a>: about 2 t gold per GW of heat per year; 13.7 to 17.7 years of cooling.</li>
+      <li><a href="https://arxiv.org/pdf/2604.02590" target="_blank" rel="noopener">Parisi and Azad 2026</a>: high-flux blankets about 4 t; natural mercury converts; about 3x less gold than enriched.</li>
+      <li><a href="https://arxiv.org/abs/2512.09242v1" target="_blank" rel="noopener">Parisi et al. 2025</a>: gold revenue lowers the plasma gain fusion needs.</li>
+      <li><a href="https://www.gold.org/goldhub/research/gold-demand-trends/gold-demand-trends-full-year-2025/supply" target="_blank" rel="noopener">World Gold Council FY 2025</a>: mine output 3,672 t. Above-ground stock about 222,600 t, mid-2026.</li>
+      <li><a href="https://pubs.usgs.gov/periodicals/mcs2026/mcs2026-mercury.pdf" target="_blank" rel="noopener">USGS 2026</a>: about 600 kt of mercury resources.</li>
+      <li><a href="https://mercomindia.com/solar-and-wind-additions-push-global-renewable-energy-capacity-to-5-2-tw" target="_blank" rel="noopener">IRENA 2026</a>: about 10.4 TW of power capacity worldwide, end of 2025.</li>
+      <li><a href="https://www.kitco.com/charts/gold" target="_blank" rel="noopener">Kitco</a>: $4,090/oz on 22 Oct 2026.</li>
+    </ul></div>
+  </details>
+  <p class="foot">Model, not forecast. Prices in 2026 dollars.</p>
+</div>
+
+<script>
+(function(){
+"use strict";
+var ARTIFACT_URL = "";
+var S0 = 222600, MINE = 3672, PRICE0 = 4090, Y0 = 2026, Y1 = 2070, START = 2031, N = Y1 - Y0 + 1;
+var YEARS = []; for (var yy = Y0; yy <= Y1; yy++) YEARS.push(yy);
+var BOARD = [2035, 2040, 2050, 2060];
+var FIX = { eff:0.40, avail:0.80, horizon:10, delay:10, ramp:6, halfK:0.5, elast:0.3, floor:1100, post:0.03, proof:25 };
+var TECH = [
+  { label:"Published", inv:250, usable:0.10, yieldTh:2.0, spec:"250 t Hg per GW heat · only Hg-198 (10%) converts · 2 t gold per GW-yr" },
+  { label:"Lean", inv:25, usable:0.10, yieldTh:2.0, spec:"25 t Hg per GW heat · only Hg-198 (10%) converts · 2 t gold per GW-yr" },
+  { label:"High-flux", inv:4, usable:0.90, yieldTh:0.5, spec:"4 t Hg per GW heat · natural Hg converts · 0.5 t gold per GW-yr" }
+];
+var DEFAULTS = { cap50:1000, share:55, tech:1, hg:600, react:50 };
+var KEYS = ["cap50", "share", "tech", "hg", "react"];
+var PRESETS = [
+  { id:"slow", label:"Slow", p:{ cap50:100, share:30, react:40 } },
+  { id:"base", label:"Base", p:{} },
+  { id:"maxai", label:"Max AI", p:{ cap50:100000, hg:1500, react:60 } },
+  { id:"maxhg", label:"Max AI + all Hg", p:{ cap50:100000, tech:2, hg:10000, react:60 } }
+];
+
+function fmtInt(v){ return Math.round(v).toLocaleString("en-US"); }
+function money(v){ return "$" + fmtInt(v); }
+function capFmt(v){
+  if (v < 1000) return fmtInt(v) + " GW";
+  var tw = v / 1000; return (tw < 10 ? (Math.round(tw * 10) / 10).toString() : fmtInt(tw)) + " TW";
+}
+function gap(d){ var v = d * 100; if (v < 0.05) return "0%"; return "\u2212" + (v < 10 ? v.toFixed(1) : Math.round(v)) + "%"; }
+function reactWord(v){ return v < 20 ? "Calm" : v < 45 ? "Muted" : v < 65 ? "Normal" : v < 85 ? "Nervous" : "Panic"; }
+function reactParams(v){ return { cred: 0.2 + 0.8 * v / 100, dmax: 0.05 + 0.5 * v / 100 }; }
+
+var CTL = [
+  { id:"cap50", label:"Fusion capacity in 2050", log:true, min:10, max:100000, fmt:capFmt,
+    ticks:[ { v:10400, l:"all power today", r:true } ] },
+  { id:"share", label:"Share of fusion making gold", min:0, max:100, step:5, fmt:function(v){ return v + "%"; } },
+  { id:"tech", type:"seg", label:"Blanket design" },
+  { id:"hg", label:"Mercury available", log:true, min:300, max:20000, fmt:function(v){ return fmtInt(v) + " kt"; },
+    ticks:[ { v:600, l:"USGS" }, { v:1500, l:"extractable est." } ] },
+  { id:"react", label:"Investor reaction", min:0, max:100, step:5, fmt:reactWord }
+];
+
+/* ---------- model ---------- */
+function run(s){
+  var T = TECH[s.tech], rp = reactParams(s.react);
+  var K = 1.2 * s.cap50, a = Math.log(Math.max(K - 1, 1.0001));
+  var r = (Math.log(5) + a) / (2050 - START), tm = START + a / r;
+  var cap = YEARS.map(function(t){
+    var c = K / (1 + Math.exp(-r * (t - tm))) * Math.pow(1 + FIX.post, Math.max(0, t - 2050));
+    return c < 0.05 ? 0 : c;
+  });
+  var perGWe = T.yieldTh / FIX.eff * FIX.avail, hgPerGWe = T.inv / FIX.eff / T.usable;
+  var disc = new Array(N).fill(0), out = null;
+  for (var it = 0; it < 80; it++){
+    var G = [], P = [], cum = [], want = [], hgBind = null, floorBind = null, cumFeed = 0, i;
+    for (i = 0; i < N; i++){
+      var g = cap[i] * s.share / 100; want[i] = g;
+      if (i > 0 && g > G[i-1]){
+        var prev = PRICE0 * (1 - disc[i-1]);
+        var f = Math.min(1, Math.max(0, (prev - FIX.floor) / (0.3 * FIX.floor)));
+        if (f < 1 && floorBind === null) floorBind = YEARS[i];
+        g = G[i-1] + (g - G[i-1]) * f;
+      }
+      var gMax = Math.max(0, (s.hg * 1000 - cumFeed) / hgPerGWe);
+      if (g > gMax + 1e-9){ g = gMax; if (hgBind === null) hgBind = YEARS[i]; }
+      G[i] = g; P[i] = g * perGWe;
+      cumFeed += P[i] * (200.6 / 197) / T.usable;
+      cum[i] = (i ? cum[i-1] : 0) + P[i];
+    }
+    var cumAt = function(k){ return k < 0 ? 0 : cum[Math.min(k, N - 1)]; };
+    var cumF = function(k){ return k < N ? cumAt(k) : cum[N-1] + P[N-1] * (k - N + 1); };
+    var Pat = function(k){ return k < 0 ? 0 : (k < N ? P[k] : P[N-1]); };
+    var tProof = null;
+    for (i = 0; i < N; i++) if (P[i] >= FIX.proof){ tProof = YEARS[i]; break; }
+    var nd = [], priced = [], lost = [], cumLost = 0;
+    for (var k = 0; k < N; k++){
+      var t = YEARS[k], cumDel = cumAt(k - FIX.delay);
+      lost[k] = MINE * FIX.elast * (k ? nd[k-1] : 0); cumLost += lost[k];
+      var Sb = S0 + MINE * (t - Y0), Sa = Sb + cumDel - cumLost;
+      var cr = tProof === null ? 0 : rp.cred * Math.min(1, Math.max(0, (t - tProof + 1) / FIX.ramp));
+      priced[k] = cr * Math.max(0, cumF(k + FIX.horizon) - cumDel);
+      var x = cr * Pat(k + FIX.horizon) / MINE;
+      var dem = x > 0 ? rp.dmax * x / (x + FIX.halfK) : 0;
+      nd[k] = 1 - (1 - dem) * Sb / (Sa + priced[k]);
+    }
+    var w = it === 0 ? 1 : Math.max(0.1, 1 / (it + 1)), delta = 0;
+    for (var q = 0; q < N; q++){ delta = Math.max(delta, Math.abs(nd[q] - disc[q])); disc[q] = (1 - w) * disc[q] + w * nd[q]; }
+    out = { cap:cap, G:G, P:P, want:want, disc:disc.slice(), priced:priced, lost:lost,
+      price: disc.map(function(d){ return PRICE0 * (1 - d); }), hgBind:hgBind, floorBind:floorBind, tProof:tProof };
+    if (it > 3 && delta < 1e-7) break;
+  }
+  return out;
+}
+
+/* ---------- state ---------- */
+var state = Object.assign({}, DEFAULTS), active = "base", focus = 2050, model = null, hashTimer = null;
+var ui = {};
+function idx(y){ return y - Y0; }
+function logPos(c, v){ return Math.log(v / c.min) / Math.log(c.max / c.min); }
+function fromLog(c, s){
+  var v = c.min * Math.pow(c.max / c.min, s / 1000);
+  var mag = Math.pow(10, Math.floor(Math.log10(v)) - 1);
+  return Math.round(v / mag) * mag;
+}
+
+/* ---------- build UI ---------- */
+function build(){
+  var cells = document.getElementById("cells");
+  BOARD.forEach(function(y){
+    var b = document.createElement("button"); b.type = "button"; b.className = "cell"; b.dataset.y = y;
+    b.innerHTML = '<span class="y">' + y + '</span><span class="g">0%</span><span class="p">$0</span>';
+    b.addEventListener("click", function(){ focus = y; render(); });
+    cells.appendChild(b);
+  });
+  var pr = document.getElementById("presets");
+  PRESETS.forEach(function(p){
+    var b = document.createElement("button"); b.type = "button"; b.textContent = p.label; b.dataset.id = p.id;
+    b.addEventListener("click", function(){ state = Object.assign({}, DEFAULTS, p.p); active = p.id; update(); });
+    pr.appendChild(b);
+  });
+  var box = document.getElementById("inputs");
+  CTL.forEach(function(c){
+    var wrap = document.createElement("div"); wrap.className = "ctl";
+    if (c.type === "seg"){
+      wrap.innerHTML = '<div class="ctl-h"><span class="t">' + c.label + '</span></div>';
+      var seg = document.createElement("div"); seg.className = "seg small"; seg.setAttribute("role", "group"); seg.setAttribute("aria-label", c.label);
+      seg.style.marginTop = "8px";
+      TECH.forEach(function(tk, n){
+        var b = document.createElement("button"); b.type = "button"; b.textContent = tk.label;
+        b.addEventListener("click", function(){ state.tech = n; active = null; update(); });
+        seg.appendChild(b);
+      });
+      var sp = document.createElement("p"); sp.className = "spec";
+      wrap.appendChild(seg); wrap.appendChild(sp);
+      ui[c.id] = { seg:seg, spec:sp, c:c };
+    } else {
+      var h = document.createElement("div"); h.className = "ctl-h";
+      var lab = document.createElement("label"); lab.htmlFor = "in-" + c.id; lab.textContent = c.label;
+      var o = document.createElement("output"); o.htmlFor = "in-" + c.id;
+      h.appendChild(lab); h.appendChild(o); wrap.appendChild(h);
+      var rng = document.createElement("input"); rng.type = "range"; rng.id = "in-" + c.id;
+      if (c.log){ rng.min = 0; rng.max = 1000; rng.step = 1; } else { rng.min = c.min; rng.max = c.max; rng.step = c.step; }
+      rng.addEventListener("input", function(){
+        state[c.id] = c.log ? fromLog(c, +rng.value) : +rng.value; active = null; update();
+      });
+      wrap.appendChild(rng);
+      if (c.ticks){
+        var tk = document.createElement("div"); tk.className = "ticks"; tk.setAttribute("aria-hidden", "true");
+        c.ticks.forEach(function(t){
+          var s = document.createElement("span"); s.textContent = t.l; if (t.r) s.className = "r";
+          var f = c.log ? logPos(c, t.v) : (t.v - c.min) / (c.max - c.min);
+          s.style.left = "calc(9px + (100% - 18px) * " + f.toFixed(4) + ")";
+          tk.appendChild(s);
+        });
+        wrap.appendChild(tk);
+      }
+      var spc = null;
+      if (c.id === "react"){ spc = document.createElement("p"); spc.className = "spec"; wrap.appendChild(spc); }
+      ui[c.id] = { el:rng, out:o, c:c, spec:spc };
+    }
+    box.appendChild(wrap);
+  });
+  var act = document.createElement("div"); act.className = "actions";
+  act.innerHTML = '<button type="button" class="btn primary" id="shareBtn">Copy link</button><button type="button" class="btn" id="resetBtn">Reset</button>';
+  box.appendChild(act);
+  var so = document.createElement("div"); so.className = "share-out"; so.id = "shareOut";
+  so.innerHTML = '<input id="shareField" readonly aria-label="Scenario link">';
+  box.appendChild(so);
+  var sm = document.createElement("p"); sm.className = "share-msg"; sm.id = "shareMsg"; sm.setAttribute("aria-live", "polite");
+  box.appendChild(sm);
+  document.getElementById("resetBtn").addEventListener("click", function(){ state = Object.assign({}, DEFAULTS); active = "base"; update(); });
+  document.getElementById("shareBtn").addEventListener("click", share);
+}
+
+function syncInputs(){
+  CTL.forEach(function(c){
+    var u = ui[c.id], v = state[c.id];
+    if (c.type === "seg"){
+      var bs = u.seg.querySelectorAll("button");
+      for (var i = 0; i < bs.length; i++) bs[i].setAttribute("aria-pressed", i === v ? "true" : "false");
+      u.spec.textContent = TECH[v].spec;
+      return;
+    }
+    u.el.value = c.log ? Math.round(1000 * logPos(c, v)) : v;
+    var lo = +u.el.min, hi = +u.el.max;
+    u.el.style.setProperty("--fill", ((+u.el.value - lo) / (hi - lo) * 100) + "%");
+    u.out.textContent = c.fmt(v);
+    u.el.setAttribute("aria-valuetext", c.fmt(v));
+    if (u.spec){
+      var rp = reactParams(v);
+      u.spec.textContent = "prices in " + Math.round(rp.cred * 100) + "% of expected fusion gold · up to " + Math.round(rp.dmax * 100) + "% of holders leave";
+    }
+  });
+  var pb = document.querySelectorAll("#presets button");
+  for (var j = 0; j < pb.length; j++) pb[j].setAttribute("aria-pressed", pb[j].dataset.id === active ? "true" : "false");
+}
+
+/* ---------- share ---------- */
+function token(){ return "v3_" + KEYS.map(function(k){ return String(state[k]); }).join("_"); }
+function parseToken(h){
+  h = (h || "").replace(/^#/, "");
+  var parts = h.split("_"); if (parts[0] !== "v3" || parts.length !== KEYS.length + 1) return null;
+  var s = {};
+  for (var i = 0; i < KEYS.length; i++){ var v = parseFloat(parts[i+1]); if (!isFinite(v)) return null; s[KEYS[i]] = v; }
+  s.tech = Math.max(0, Math.min(2, Math.round(s.tech)));
+  CTL.forEach(function(c){ if (c.type !== "seg") s[c.id] = Math.min(c.max, Math.max(c.min, s[c.id])); });
+  return s;
+}
+function matchPreset(){
+  active = null;
+  PRESETS.forEach(function(p){
+    var c = Object.assign({}, DEFAULTS, p.p);
+    if (KEYS.every(function(k){ return c[k] === state[k]; })) active = p.id;
+  });
+}
+function share(){
+  var link = (ARTIFACT_URL || location.href.split("#")[0]) + "#" + token();
+  var msg = document.getElementById("shareMsg"), so = document.getElementById("shareOut"), f = document.getElementById("shareField");
+  function fallback(){ so.style.display = "block"; f.value = link; f.focus(); f.select(); msg.textContent = "Copy the link above."; }
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(link).then(function(){ so.style.display = "none"; msg.textContent = "Link copied."; }, fallback);
+    } else fallback();
+  } catch(e){ fallback(); }
+}
+
+/* ---------- charts ---------- */
+function niceStep(max, n){
+  var raw = max / n, mag = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / mag;
+  return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * mag;
+}
+function drawChart(el, cfg){
+  var W = Math.max(280, el.clientWidth || 600), Hh = W < 520 ? 210 : 250;
+  var m = { l:48, r:8, t:18, b:24 }, iw = W - m.l - m.r, ih = Hh - m.t - m.b;
+  var xs = function(t){ return m.l + (t - Y0) / (Y1 - Y0) * iw; };
+  var step = niceStep(Math.max(1e-6, cfg.yMax), 4), top = Math.ceil(cfg.yMax / step) * step;
+  var ys = function(v){ return m.t + ih - Math.max(0, v) / top * ih; };
+  var s = '<svg viewBox="0 0 ' + W + ' ' + Hh + '" role="img" aria-label="' + cfg.aria + '">';
+  for (var v = 0; v <= top + 1e-9; v += step){
+    var y = ys(v).toFixed(1);
+    if (v > 0) s += '<line x1="' + m.l + '" x2="' + (W - m.r) + '" y1="' + y + '" y2="' + y + '" stroke="var(--grid)"/>';
+    s += '<text x="' + (m.l - 6) + '" y="' + (+y + 3.5) + '" text-anchor="end">' + cfg.yFmt(v) + '</text>';
+  }
+  [2030, 2040, 2050, 2060, 2070].forEach(function(t){
+    s += '<text x="' + xs(t).toFixed(1) + '" y="' + (Hh - 6) + '" text-anchor="middle">' + t + '</text>';
+  });
+  var fx = xs(focus).toFixed(1);
+  s += '<rect x="' + (+fx - 1) + '" y="' + m.t + '" width="2" height="' + ih + '" fill="var(--yellow)"/>';
+  (cfg.markers || []).forEach(function(mk){
+    if (mk.year === null) return;
+    var x = xs(mk.year), anchor = x > W - 80 ? "end" : "start";
+    s += '<line x1="' + x.toFixed(1) + '" x2="' + x.toFixed(1) + '" y1="' + m.t + '" y2="' + (m.t + ih) + '" stroke="' + mk.color + '" stroke-width="1.5" stroke-dasharray="3 3"/>';
+    s += '<text class="mk" x="' + (x + (anchor === "start" ? 4 : -4)).toFixed(1) + '" y="' + (m.t - 6) + '" text-anchor="' + anchor + '" style="fill:' + mk.color + '">' + mk.label + '</text>';
+  });
+  (cfg.areas || []).forEach(function(a){
+    var d = "", i;
+    for (i = 0; i < N; i++) d += (i ? "L" : "M") + xs(YEARS[i]).toFixed(1) + "," + ys(a.top[i]).toFixed(1);
+    for (i = N - 1; i >= 0; i--) d += "L" + xs(YEARS[i]).toFixed(1) + "," + ys(a.bottom ? a.bottom[i] : 0).toFixed(1);
+    s += '<path d="' + d + 'Z" fill="' + a.fill + '"' + (a.opacity ? ' fill-opacity="' + a.opacity + '"' : '') + '/>';
+  });
+  cfg.series.forEach(function(se){
+    var d = ""; for (var i = 0; i < N; i++) d += (i ? "L" : "M") + xs(YEARS[i]).toFixed(1) + "," + ys(se.v[i]).toFixed(1);
+    s += '<path d="' + d + '" fill="none" stroke="' + se.c + '" stroke-width="' + se.w + '"' + (se.dash ? ' stroke-dasharray="' + se.dash + '"' : '') + ' stroke-linejoin="round"/>';
+  });
+  s += '<line x1="' + m.l + '" x2="' + (W - m.r) + '" y1="' + ys(0) + '" y2="' + ys(0) + '" stroke="var(--ink)" stroke-width="2"/>';
+  s += '<g class="hv" style="display:none"><line class="hl" y1="' + m.t + '" y2="' + (m.t + ih) + '" stroke="var(--ink)"/>';
+  cfg.series.forEach(function(se, k){ s += '<rect class="hd' + k + '" width="7" height="7" fill="var(--paper)" stroke="' + se.c + '" stroke-width="2"/>'; });
+  s += '</g><rect class="ov" x="' + m.l + '" y="' + m.t + '" width="' + iw + '" height="' + ih + '" fill="transparent"/></svg><div class="tip"></div>';
+  el.innerHTML = s;
+  var svg = el.querySelector("svg"), tip = el.querySelector(".tip"), hv = el.querySelector(".hv");
+  function show(ev){
+    var rect = svg.getBoundingClientRect(), sx = (ev.clientX - rect.left) * (W / rect.width);
+    var i = Math.max(0, Math.min(N - 1, Math.round((sx - m.l) / iw * (N - 1)))), x = xs(YEARS[i]);
+    hv.style.display = "";
+    var hl = hv.querySelector(".hl"); hl.setAttribute("x1", x); hl.setAttribute("x2", x);
+    cfg.series.forEach(function(se, k){ var c = hv.querySelector(".hd" + k); c.setAttribute("x", x - 3.5); c.setAttribute("y", ys(se.v[i]) - 3.5); });
+    var html = "<b>" + YEARS[i] + "</b>";
+    cfg.tip(i).forEach(function(r){ html += '<div class="r"><span>' + r[0] + '</span><span>' + r[1] + '</span></div>'; });
+    tip.innerHTML = html; tip.style.display = "block";
+    var px = x * rect.width / W, tw = tip.offsetWidth, left = px + 12;
+    if (left + tw > rect.width) left = px - tw - 12; if (left < 0) left = 0;
+    tip.style.left = left + "px"; tip.style.top = "0px";
+  }
+  function hide(){ hv.style.display = "none"; tip.style.display = "none"; }
+  svg.addEventListener("pointermove", show); svg.addEventListener("pointerdown", show);
+  svg.addEventListener("pointerleave", hide); svg.addEventListener("pointercancel", hide);
+}
+function tAxis(v){ return v >= 10000 ? (v / 1000) + "k" : fmtInt(v); }
+
+function drawPrice(){
+  var o = model, base = YEARS.map(function(){ return PRICE0; });
+  drawChart(document.getElementById("priceChart"), {
+    aria: "Gold price with and without fusion gold, 2026 to 2070",
+    yMax: PRICE0 * 1.08,
+    yFmt: function(v){ return v === 0 ? "0" : "$" + (v / 1000) + "k"; },
+    areas: [{ top:base, bottom:o.price, fill:"var(--yellow)", opacity:0.55 }],
+    series: [ { v:base, c:"var(--ink)", w:1.5, dash:"5 4" }, { v:o.price, c:"var(--red)", w:3 } ],
+    markers: o.hgBind !== null ? [{ year:o.hgBind, label:"Hg runs out", color:"var(--blue)" }] : [],
+    tip: function(i){ return [["Without", money(PRICE0)], ["With", money(o.price[i])], ["Gap", gap(o.disc[i])]]; }
+  });
+}
+function drawSupply(){
+  var o = model, mine = o.lost.map(function(l){ return MINE - l; });
+  drawChart(document.getElementById("supplyChart"), {
+    aria: "Mine output and fusion gold output, tonnes per year",
+    yMax: Math.max(MINE, Math.max.apply(null, o.P)) * 1.08,
+    yFmt: tAxis,
+    areas: [{ top:o.P, fill:"var(--yellow)" }],
+    series: [ { v:o.P, c:"var(--ink)", w:1.2 }, { v:mine, c:"var(--ink)", w:2.5 } ],
+    markers: o.hgBind !== null ? [{ year:o.hgBind, label:"Hg runs out", color:"var(--blue)" }] : [],
+    tip: function(i){ return [["Fusion", fmtInt(o.P[i]) + " t"], ["Mines", fmtInt(mine[i]) + " t"]]; }
+  });
+}
+
+/* ---------- text ---------- */
+function renderBoard(){
+  var bs = document.querySelectorAll(".cell");
+  for (var k = 0; k < bs.length; k++){
+    var y = +bs[k].dataset.y, i = idx(y), d = model.disc[i];
+    var g = bs[k].querySelector(".g"); g.textContent = gap(d); g.classList.toggle("zero", d < 0.0005);
+    bs[k].querySelector(".p").textContent = money(model.price[i]);
+    bs[k].setAttribute("aria-pressed", y === focus ? "true" : "false");
+    bs[k].setAttribute("aria-label", y + ": " + gap(d) + ", " + money(model.price[i]) + " per ounce");
+  }
+}
+function renderChain(){
+  var o = model, i = idx(focus), rows = [];
+  var capped = o.G[i] < o.want[i] * 0.995;
+  var why = capped ? (o.hgBind !== null && o.hgBind <= focus ? "Hg-capped" : "price-capped") : "";
+  rows.push(["Fusion capacity", capFmt(o.cap[i]), "", ""]);
+  rows.push(["Making gold", capFmt(o.G[i]) + (why ? " · " + why : ""), "sub", capped ? "blue" : ""]);
+  rows.push(["Gold output", fmtInt(o.P[i]) + " t/yr", "", ""]);
+  rows.push(["vs. mines (3,672 t/yr)", Math.round(o.P[i] / MINE * 100) + "%", "sub", ""]);
+  rows.push(["Mercury runs out", o.hgBind !== null ? String(o.hgBind) : "not by 2070", "", o.hgBind !== null ? "blue" : ""]);
+  rows.push(["Extra gold priced in", fmtInt(o.priced[i]) + " t", "", ""]);
+  rows.push(["Gold price", money(o.price[i]) + " vs " + money(PRICE0), "", ""]);
+  rows.push(["Gap, " + focus, gap(o.disc[i]), "total", "red"]);
+  var h = "";
+  rows.forEach(function(r){
+    h += '<tr' + (r[2] ? ' class="' + r[2] + '"' : '') + '><th scope="row">' + r[0] + '</th><td' + (r[3] ? ' class="' + r[3] + '"' : '') + '>' + r[1] + '</td></tr>';
+  });
+  document.getElementById("chain").innerHTML = h;
+  document.getElementById("h-chain").textContent = "Breakdown · " + focus;
+}
+function render(){ renderBoard(); renderChain(); drawPrice(); drawSupply(); }
+function update(fromInit){
+  model = run(state); syncInputs(); render();
+  var sm = document.getElementById("shareMsg"); if (sm) sm.textContent = "";
+  if (!fromInit && !ARTIFACT_URL && window.history && history.replaceState){
+    clearTimeout(hashTimer);
+    hashTimer = setTimeout(function(){ try { history.replaceState(null, "", "#" + token()); } catch(e){} }, 250);
+  }
+}
+
+build();
+var fromHash = parseToken(location.hash);
+if (fromHash){ state = Object.assign({}, DEFAULTS, fromHash); matchPreset(); }
+update(true);
+var rt = null;
+if (window.ResizeObserver){
+  new ResizeObserver(function(){ clearTimeout(rt); rt = setTimeout(function(){ drawPrice(); drawSupply(); }, 60); }).observe(document.getElementById("priceChart"));
+} else window.addEventListener("resize", function(){ drawPrice(); drawSupply(); });
+window.addEventListener("hashchange", function(){ var s = parseToken(location.hash); if (s){ state = Object.assign({}, DEFAULTS, s); matchPreset(); update(true); } });
+})();
+</script>
+</body>
+</html>
